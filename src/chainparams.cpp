@@ -11,6 +11,8 @@
 #include "random.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "net.h"
+#include "base58.h"
 
 #include <assert.h>
 
@@ -87,6 +89,7 @@ public:
     CMainParams()
     {
         networkID = CBaseChainParams::MAIN;
+	vCoinRevivalRewardAddress="CUQ14UPfk74MrQF6KThhzq7JR4adfgBPns";
         strNetworkID = "main";
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -136,9 +139,12 @@ public:
         assert(hashGenesisBlock == uint256("0x00000a49ec81e566b6013e403ef710dae79742be34c920ec6ace4e0897879c7f"));
         assert(genesis.hashMerkleRoot == uint256("0x81b81664271f0942a2868283a1f658425b5a0de3d41161a8836ccf066108af49"));
         
-
-        vSeeds.push_back(CDNSSeedData("node1.ccb.cash", "node1.ccb.cash"));
+	/*  //These are old dev seeds
+	vSeeds.push_back(CDNSSeedData("node1.ccb.cash", "node1.ccb.cash"));
         vSeeds.push_back(CDNSSeedData("node2.ccb.cash", "node2.ccb.cash"));
+	*/
+        vSeeds.push_back(CDNSSeedData("n1.ccbcoin.club", "n1.ccbcoin.club"));
+        vSeeds.push_back(CDNSSeedData("n2.ccbcoin.club", "n2.ccbcoin.club"));
         //vFixedSeeds.clear();
         //vSeeds.clear();
 
@@ -196,8 +202,8 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 1 * 60;
-        nTargetSpacing = 1 * 60;
+        nTargetTimespan = 0.10 * 60; //Every 10 sec a new block is made in testnet
+        nTargetSpacing = 0.10 * 60;  //Every 10 sec a new block is made in testnet
         nLastPOWBlock = 200;
         nMaturity = 15;
         nModifierUpdateBlock = 51197; //approx Mon, 30 Apr 2018 04:00:00 GMT
@@ -210,9 +216,13 @@ public:
 
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x000006182027a1f9647bb46b019d1058a65ced2b69e98b68443654fe5c9d00fa"));
-
-        vFixedSeeds.clear();
-        vSeeds.clear();
+	
+	//CCB seeds to get chain to sync
+	vSeeds.push_back(CDNSSeedData("n1.ccbcoin.club", "n1.ccbcoin.club"));
+        vSeeds.push_back(CDNSSeedData("n2.ccbcoin.club", "n2.ccbcoin.club"));
+	
+       // vFixedSeeds.clear();
+       // vSeeds.clear();
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 83);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 18);
@@ -247,6 +257,20 @@ public:
         return dataTestnet;
     }
 };
+
+std::string CChainParams::GetCoinRevivalRewardAddressAtHeight(int nHeight) const {
+    return vCoinRevivalRewardAddress;
+}
+
+CScript CChainParams::GetCoinRevivalRewardScriptAtHeight(int nHeight) const {
+    CBitcoinAddress address(GetCoinRevivalRewardAddressAtHeight(nHeight).c_str());
+    assert(address.IsValid());
+
+    CScript script = GetScriptForDestination(address.Get());
+    return script; 
+}
+
+
 static CTestNetParams testNetParams;
 
 /**
@@ -280,8 +304,11 @@ public:
         nDefaultPort = 57123;
         assert(hashGenesisBlock == uint256("0x5963c6707ed098723a226c643af2b8b442a6885a7384b1f7c589c8da0c514c2e"));
 
-        vFixedSeeds.clear(); //! Testnet mode doesn't have any fixed seeds.
-        vSeeds.clear();      //! Testnet mode doesn't have any DNS seeds.
+	//CCB seeds to get chain to sync
+	vSeeds.push_back(CDNSSeedData("n1.ccbcoin.club", "n1.ccbcoin.club"));
+        vSeeds.push_back(CDNSSeedData("n2.ccbcoin.club", "n2.ccbcoin.club"));
+       // vFixedSeeds.clear(); //! Testnet mode doesn't have any fixed seeds.
+       // vSeeds.clear();      //! Testnet mode doesn't have any DNS seeds.
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
@@ -309,6 +336,10 @@ public:
         networkID = CBaseChainParams::UNITTEST;
         strNetworkID = "unittest";
         nDefaultPort = 56123;
+	
+	//CCB seeds to get chain to sync
+	vSeeds.push_back(CDNSSeedData("n1.ccbcoin.club", "n1.ccbcoin.club"));
+        vSeeds.push_back(CDNSSeedData("n2.ccbcoin.club", "n2.ccbcoin.club"));
         vFixedSeeds.clear(); //! Unit test mode doesn't have any fixed seeds.
         vSeeds.clear();      //! Unit test mode doesn't have any DNS seeds.
 

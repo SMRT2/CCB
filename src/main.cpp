@@ -70,7 +70,37 @@ unsigned int nCoinCacheSize = 5000;
 bool fAlerts = DEFAULT_ALERTS;
 
 unsigned int nStakeMinAge = 60 * 60;
+
+/*
+static unsigned int nStakeMinAgeV1 = 60 * 60; // Current mature time
+static unsigned int nStakeMinAgeV2 = 0.5 * 60 * 60; // 30 minutes after block 98,800
+const int targetReadjustment_forkBlockHeight = 98800; //retargeting since 98,800 block
+*/
+
 int64_t nReserveBalance = 0;
+
+/*
+bool IsProtocolMaturityV2(int nHeight)
+{
+    return(nHeight >= targetReadjustment_forkBlockHeight);
+}
+
+unsigned int GetStakeMinAge(int nHeight)
+{
+    if(IsProtocolMaturityV2(nHeight))
+        return nStakeMinAgeV2;
+    else
+        return nStakeMinAgeV1;
+}
+
+int GetMinPeerProtoVersion(int nHeight)
+{
+	if(nHeight!=0)
+		return(IsProtocolMaturityV2(nHeight)? NEW_PROTOCOL_VERSION : PROTOCOL_VERSION);
+	else
+	    return NEW_PROTOCOL_VERSION; //if we build blockchain from the scratch, ask for a new version first
+}
+*/
 
 /** Fees smaller than this (in duffs) are considered zero fee (for relaying and mining)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
@@ -920,6 +950,7 @@ int GetIXConfirmations(uint256 nTXHash)
 // guaranteed to be in main chain by sync-checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
+
 bool GetCoinAge(const CTransaction& tx, const unsigned int nTxTime, uint64_t& nCoinAge)
 {
     uint256 bnCentSecond = 0; // coin age in the unit of cent-seconds
@@ -1618,12 +1649,23 @@ double ConvertBitsToDouble(unsigned int nBits)
     return dDiff;
 }
 
+//Reworked Reward Structure with Coin Revival incorporated
 int64_t GetBlockValue(int nHeight)
 {
  	int64_t nSubsidy = 2 * COIN;
 	
+	if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+         if (nHeight < 200 && nHeight > 0)
+             return 10 * COIN;
+     }	
+	
+	 if(IsCoinRevivalBlock(nHeight)) {
+        LogPrintf("GetBlockValue(): this Coin Revival Block\n");
+		nSubsidy = GetCoinRevivalAward(nHeight);
+	
+	} else {	 
 	   if (nHeight == 1) {
-       nSubsidy = 500000 * COIN;
+       nSubsidy = 500000 * COIN; //genesis
      } else if (nHeight > 1 && nHeight <= 3000) {
        nSubsidy = 1 * COIN;
      } else if (nHeight > 3000 && nHeight <= 98800) {
@@ -1632,22 +1674,71 @@ int64_t GetBlockValue(int nHeight)
        nSubsidy = 72 * COIN;
      } else if (nHeight > 113200 && nHeight <= 127600){
        nSubsidy = 36 * COIN;
-     } else if (nHeight > 127600 && nHeight <= 142000) {
+    	} else {
        nSubsidy = 18 * COIN;
 	}
+	 }
     return nSubsidy;
-
+	 
 }
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount)
 {
-
-
-	int64_t ret = 0;
+	 int64_t ret = 0;
 	
-        ret = blockValue * 0.75;
+	if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+         if (nHeight < 200)
+             return 0;
+     }
+	//Old Masternode Reward Structure
 	
-	return ret;
+	//int64_t ret = 0;
+	
+       // ret = blockValue * 0.70;
+	
+	//return ret;
+ 	
+ 	// 70% for Masternodes on current block
+ 	if (nHeight <= 98800) {
+ 	      ret = blockValue  / 100 * 70; //70%
+ 	} else if (nHeight > 98800 && nHeight <= 113200) {
+ 	      ret = blockValue  / 72 * 72; //72%
+	} else if (nHeight > 113200 && nHeight <= 127600) {
+ 	      ret = blockValue  / 36 * 74; //74%
+	} else {
+	      ret = blockValue  / 18 * 75; //74%
+ 		
+ 	}
+}
+
+//Coin Revival blocks start at block 98800
+int nStartCoinRevivalBlock = 98800;
+int nCoinRevivalBlockStep = 1;
+
+//Checks to see if block count above is correct if not then no Coin Revival
+bool IsCoinRevivalBlock(int nHeight)
+{
+	if(nHeight < nStartCoinRevivalBlock)
+		return false;
+	else if( (nHeight-nStartCoinRevivalBlock) % nCoinRevivalBlockStep == 0)
+		return true;
+	else
+		return false;
+}
+
+//Coin Revival Reward payouts per halving per block
+int64_t GetCoinRevivalAward(int nHeight)
+{
+		if(IsCoinRevivalBlock(nHeight)) {
+			if(nHeight == nStartCoinRevivalBlock) 
+				return 3.6 * COIN; //3.6 on start 
+	 	else if(nHeight > 113200 && nHeight <= 127600) 
+			return 1.8 * COIN; //3.6 on second halving
+	 	else if(nHeight >= 127600)
+			return 0.9 * COIN; //0.9 on last halving
+		}else
+
+		return 0;
 }
 
 bool IsInitialBlockDownload()
@@ -2180,12 +2271,33 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     pindex->nMint = nValueOut - nValueIn + nFees;
     pindex->nMoneySupply = nMoneySupplyPrev + nValueOut - nValueIn;
 
+    //PoW phase redistributed fees to miner. PoS stage destroys fees.
     CAmount nExpectedMint = GetBlockValue(pindex->pprev->nHeight);
-    if (pindex->pprev->nHeight > 4200 && !IsBlockValueValid(block, nExpectedMint, pindex->nMint)) {
-        return state.DoS(100,
-            error("ConnectBlock() : reward pays too much (actual=%s vs limit=%s)",
-                FormatMoney(pindex->nMint), FormatMoney(nExpectedMint)),
-            REJECT_INVALID, "bad-cb-amount");
+    //if (pindex->pprev->nHeight > 4200 && !IsBlockValueValid(block, nExpectedMint, pindex->nMint)) {
+     //   return state.DoS(100,
+         //   error("ConnectBlock() : reward pays too much (actual=%s vs limit=%s)",
+           //     FormatMoney(pindex->nMint), FormatMoney(nExpectedMint)),
+          // REJECT_INVALID, "bad-cb-amount");
+	  CAmount nExpectedMintNext = GetBlockValue(pindex->pprev->nHeight+1);
+    CAmount nExpectedMint2 = nExpectedMint+nExpectedMintNext;
+    
+    if (block.IsProofOfWork()) {
+        nExpectedMint2 += nFees;
+	}
+	if (!IsBlockValueValid(block, nExpectedMint2, pindex->nMint)) {
+		
+		
+	        return state.DoS(100,
+	            error("ConnectBlock() : reward pays too much (actual=%s vs limit=%s)",
+	                FormatMoney(pindex->nMint), FormatMoney(nExpectedMint2)),
+	            REJECT_INVALID, "bad-cb-amount");
+	//if (!IsBlockValueValid(block, nExpectedMint2, pindex->nMint)) {
+		
+		
+	       // return state.DoS(100,
+	          //  error("ConnectBlock() : reward pays too much (actual=%s vs limit=%s)",
+	           //     FormatMoney(pindex->nMint), FormatMoney(nExpectedMint2)),
+	          //  REJECT_INVALID, "bad-cb-amount");
     }
 
     if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex)))
@@ -4567,6 +4679,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
         return true;
     }
+	int nCurHeight = GetHeight();
 
     if (strCommand == "version") {
         // Each connection can only send one version message
@@ -4582,6 +4695,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
         if (pfrom->DisconnectOldProtocol(ActiveProtocol(), strCommand))
+          //if (pfrom->DisconnectOldProtocol(GetMinPeerProtoVersion(nCurHeight), strCommand))
             return false;
 
         if (pfrom->nVersion == 10300)
@@ -5082,6 +5196,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 //disconnect this node if its old protocol version
                 pfrom->DisconnectOldProtocol(ActiveProtocol(), strCommand);
+		  //pfrom->DisconnectOldProtocol(GetMinPeerProtoVersion(pindexBestHeader->nHeight), strCommand);
             }
         }
 

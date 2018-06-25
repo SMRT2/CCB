@@ -134,7 +134,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         if (nSearchTime >= nLastCoinStakeSearchTime) {
             unsigned int nTxNewTime = 0;
             if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime - nLastCoinStakeSearchTime, txCoinStake, nTxNewTime)) {
-                pblock->nTime = nTxNewTime;
+                // if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime - nLastCoinStakeSearchTime, txCoinStake, nTxNewTime, pindexPrev->nHeight)) {
+		pblock->nTime = nTxNewTime;
                 pblock->vtx[0].vout[0].SetEmpty();
                 pblock->vtx.push_back(CTransaction(txCoinStake));
                 fStakeFound = true;
@@ -463,6 +464,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
     {
         nMintableLastCheck = GetTime();
         fMintableCoins = pwallet->MintableCoins();
+	 // fMintableCoins = pwallet->MintableCoins(chainActive.Tip()->nHeight);
     }
 
     while (fGenerateBitcoins || fProofOfStake) {

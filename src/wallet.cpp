@@ -21,6 +21,7 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+//#include "main.h"
 
 #include <assert.h>
 
@@ -1561,6 +1562,7 @@ bool less_then_denom(const COutput& out1, const COutput& out2)
 }
 
 bool CWallet::SelectStakeCoins(std::set<std::pair<const CWalletTx*, unsigned int> >& setCoins, int64_t nTargetAmount) const
+//bool CWallet::SelectStakeCoins(std::set<std::pair<const CWalletTx*, unsigned int> >& setCoins, CAmount nTargetAmount, int nHeight) const
 {
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true);
@@ -1573,7 +1575,8 @@ bool CWallet::SelectStakeCoins(std::set<std::pair<const CWalletTx*, unsigned int
 
         //check for min age
         if (GetTime() - out.tx->GetTxTime() < nStakeMinAge)
-            continue;
+	    //if (GetTime() - out.tx->GetTxTime() < GetStakeMinAge(nHeight))
+		continue;
 
         //check that it is matured
         if (out.nDepth < (out.tx->IsCoinStake() ? Params().COINBASE_MATURITY() : 10))
@@ -1587,6 +1590,7 @@ bool CWallet::SelectStakeCoins(std::set<std::pair<const CWalletTx*, unsigned int
 }
 
 bool CWallet::MintableCoins()
+//bool CWallet::MintableCoins(int nHeight)
 {
     int64_t nBalance = GetBalance();
     if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
@@ -1599,6 +1603,7 @@ bool CWallet::MintableCoins()
 
     BOOST_FOREACH (const COutput& out, vCoins) {
         if (GetTime() - out.tx->GetTxTime() > nStakeMinAge)
+		//if (GetTime() - out.tx->GetTxTime() > GetStakeMinAge(nHeight))
             return true;
     }
 
@@ -2317,6 +2322,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue, CWa
 
 // ppcoin: create coin stake transaction
 bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew, unsigned int& nTxNewTime)
+//bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew, unsigned int& nTxNewTime, int nPrevHeight)
 {
 
     txNew.vin.clear();
@@ -2343,6 +2349,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     if (GetTime() - nLastStakeSetUpdate > nStakeSetUpdateTime) {
         setStakeCoins.clear();
         if (!SelectStakeCoins(setStakeCoins, nBalance - nReserveBalance))
+	   // if (!SelectStakeCoins(setStakeCoins, nBalance - nReserveBalance, nPrevHeight))
             return false;
 
         nLastStakeSetUpdate = GetTime();

@@ -473,9 +473,12 @@ void CNode::PushVersion()
     GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     if (fLogIPs)
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
+    //LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", GetMinPeerProtoVersion(nBestHeight), nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
+       // LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", GetMinPeerProtoVersion(nBestHeight), nBestHeight, addrMe.ToString(), id);
+   // PushMessage("version", GetMinPeerProtoVersion(nBestHeight), nLocalServices, nTime, addrYou, addrMe,
         nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
 }
 

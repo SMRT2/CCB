@@ -11,6 +11,7 @@
 #include "script/interpreter.h"
 #include "timedata.h"
 #include "util.h"
+//#include "main.h"
 
 
 using namespace std;
@@ -35,8 +36,10 @@ static std::map<int, unsigned int> mapStakeModifierCheckpoints =
 
 // Get time weight
 int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd)
+//int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd, int nHeight)
 {
     return nIntervalEnd - nIntervalBeginning - nStakeMinAge;
+    //return nIntervalEnd - nIntervalBeginning - GetStakeMinAge(nHeight);
 }
 
 // Get the last stake modifier and its generation time from a given block
@@ -315,6 +318,9 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock blockFrom, const CTra
         return false;
     }
 
+    //if (nTimeBlockFrom + GetStakeMinAge(nStakeModifierHeight) > nTimeTx) // Min age requirement
+      //  return error("CheckStakeKernelHash() : min age violation - nTimeBlockFrom=%d nStakeMinAge=%d nTimeTx=%d", nTimeBlockFrom, GetStakeMinAge(nStakeModifierHeight), nTimeTx);
+    
     //create data stream once instead of repeating it in the loop
     CDataStream ss(SER_GETHASH, 0);
     ss << nStakeModifier;

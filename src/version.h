@@ -8,11 +8,12 @@
 #ifndef BITCOIN_VERSION_H
 #define BITCOIN_VERSION_H
 
+
 /**
  * network protocol versioning
  */
-
-static const int PROTOCOL_VERSION = 70713;
+static const int NEW_PROTOCOL_VERSION = 70014; //new version with coin revival fee 
+static const int PROTOCOL_VERSION = 70713; //release
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
