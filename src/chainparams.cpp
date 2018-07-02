@@ -130,9 +130,9 @@ public:
         genesis.nBits = 0x1e0ffff0;
         genesis.nNonce = 21334304;
 
-		 printf("Generating genesis block...\n");
-        --uint32_t nounce = 1;
-        -while (1)
+		printf("Generating genesis block...\n");
+        uint32_t nounce = 1;
+        while (1)
         {
              //printf("Nounce: %d\n", nounce);
                 -genesis.nNonce = nounce;
