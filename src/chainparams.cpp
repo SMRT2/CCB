@@ -154,8 +154,8 @@ public:
             
         }
 
-        -printf("genesis: %s\n", hashGenesisBlock.GetHex().c_str());
-        -printf("merklehash: %s\n", genesis.hashMerkleRoot.ToString().c_str());
+        printf("genesis: %s\n", hashGenesisBlock.GetHex().c_str());
+        printf("merklehash: %s\n", genesis.hashMerkleRoot.ToString().c_str());
 		
         hashGenesisBlock = genesis.GetHash();
 		//printf("%s\n", hashGenesisBlock.ToString().c_str());
