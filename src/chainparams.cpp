@@ -160,8 +160,12 @@ public:
         hashGenesisBlock = genesis.GetHash();
 		//printf("%s\n", hashGenesisBlock.ToString().c_str());
 		//printf("%s\n", genesis.hashMerkleRoot.ToString().c_str());
-        assert(hashGenesisBlock == uint256("0x00000a49ec81e566b6013e403ef710dae79742be34c920ec6ace4e0897879c7f"));
-        assert(genesis.hashMerkleRoot == uint256("0x81b81664271f0942a2868283a1f658425b5a0de3d41161a8836ccf066108af49"));
+
+        //0x00000a49ec81e566b6013e403ef710dae79742be34c920ec6ace4e0897879c7f
+        assert(hashGenesisBlock == uint256(""));
+
+		//0x81b81664271f0942a2868283a1f658425b5a0de3d41161a8836ccf066108af49
+        assert(genesis.hashMerkleRoot == uint256(""));
         
 
         vSeeds.push_back(CDNSSeedData("n1.ccbcoin.club", "n1.ccbcoin.club"));
