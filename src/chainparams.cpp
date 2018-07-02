@@ -135,7 +135,7 @@ public:
         while (1)
         {
              //printf("Nounce: %d\n", nounce);
-                -genesis.nNonce = nounce;
+                genesis.nNonce = nounce;
             hashGenesisBlock = genesis.GetHash();
             if (hashGenesisBlock.GetHex() < std::string("0000ffffff000000000000000000000000000000000000000000000000000000"))
             {
