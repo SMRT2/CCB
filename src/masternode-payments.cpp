@@ -245,27 +245,15 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
             return true;
         }
     }
-    /*
-    //check for masternode payee
-    if (masternodePayments.IsTransactionValid(txNew, nBlockHeight))
-        return true;
-    LogPrintf("Invalid mn payment detected %s\n", txNew.ToString().c_str());
-
-    if (IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT))
-        return false;
-    LogPrintf("Masternode payment enforcement is disabled, accepting block\n");
-
-    return true;
-}
-*/
-
-
+  
 	//check if it's valid treasury block
     if (IsTreasuryBlock(nBlockHeight))
     {
         CScript treasuryPayee = Params().GetTreasuryRewardScriptAtHeight(nBlockHeight);
         CAmount treasuryAmount = GetTreasuryAward(nBlockHeight);
+
         bool bFound = false;
+
         BOOST_FOREACH (CTxOut out, txNew.vout)
         {
             if (out.nValue == treasuryAmount)
@@ -276,10 +264,12 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
             }
             
         }
+
         if (!bFound)
         {
             LogPrint("masternode", "Invalid treasury payment detected %s\n", txNew.ToString().c_str());
-            if (IsSporkActive(SPORK_17_TREASURY_PAYMENT_ENFORCEMENT)) + return false;
+            if (IsSporkActive(SPORK_17_TREASURY_PAYMENT_ENFORCEMENT)) 
+				return false;
             else
             {
                 LogPrint("masternode", "SPORK_17_TREASURY_PAYMENT_ENFORCEMENT is not enabled, accept anyway\n");
@@ -288,6 +278,7 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
             }
             
         }
+
         else
         {
             LogPrint("masternode", "Valid treasury payment detected %s\n", txNew.ToString().c_str());
@@ -313,13 +304,14 @@ void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees, bool fProofOfStak
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (!pindexPrev) return;
 
-    if (IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1)) {
+    if (IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1))
+	{
         budget.FillBlockPayee(txNew, nFees, fProofOfStake);
     //} else {
-    } else if (IsTreasuryBlock(pindexPrev->nHeight)) {
-        + //LogPrintf("FillBlockPayee(): It's time for treasury payment! Block %d\n",pindexPrev->nHeight + 1);
-            +budget.FillTreasuryBlockPayee(txNew, nFees, fProofOfStake);
-        +
+    } else if (IsTreasuryBlock(pindexPrev->nHeight)){
+         //LogPrintf("FillBlockPayee(): It's time for treasury payment! Block %d\n",pindexPrev->nHeight + 1);
+            budget.FillTreasuryBlockPayee(txNew, nFees, fProofOfStake);
+        
     } else {
         masternodePayments.FillBlockPayee(txNew, nFees, fProofOfStake);
     }
