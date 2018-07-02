@@ -513,7 +513,7 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees, b
 }
 
 
-void CBudgetManager::FillTreasuryBlockPayee(CMutableTransaction& txNew, CAmount nFees, bool fProofOfStake) +
+void CBudgetManager::FillTreasuryBlockPayee(CMutableTransaction& txNew, CAmount nFees, bool fProofOfStake)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (!pindexPrev) return;
