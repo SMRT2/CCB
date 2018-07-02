@@ -130,42 +130,11 @@ public:
         genesis.nBits = 0x1e0ffff0;
         genesis.nNonce = 21334304;
 
-		printf("Generating genesis block...\n");
-        uint32_t nounce = 1;
-        while (1)
-        {
-             //printf("Nounce: %d\n", nounce);
-                genesis.nNonce = nounce;
-            hashGenesisBlock = genesis.GetHash();
-            if (hashGenesisBlock.GetHex() < std::string("0000ffffff000000000000000000000000000000000000000000000000000000"))
-            {
-                     //if(hashGenesisBlock.GetHex() < bnProofOfWorkLimit.GetHex()) {
-                     //if(consensus.hashGenesisBlock.GetHex() < std::string("0000082da923a04678394f873852c7f08b777af30224b6e23296f586370e80ae")) {
-                    printf("nounce: %x\n", nounce);
-                break;
-                
-            }
-            else
-            {
-                if (nounce % 10000 == 0) - printf("nounce: %x, hash: %s, merklehash:%s\n", nounce, hashGenesisBlock.GetHex().c_str(), genesis.hashMerkleRoot.ToString().c_str());
-                ++nounce;
-                
-            }
-            
-        }
-
-        printf("genesis: %s\n", hashGenesisBlock.GetHex().c_str());
-        printf("merklehash: %s\n", genesis.hashMerkleRoot.ToString().c_str());
-		
         hashGenesisBlock = genesis.GetHash();
 		//printf("%s\n", hashGenesisBlock.ToString().c_str());
 		//printf("%s\n", genesis.hashMerkleRoot.ToString().c_str());
-
-        //0x00000a49ec81e566b6013e403ef710dae79742be34c920ec6ace4e0897879c7f
-        assert(hashGenesisBlock == uint256(""));
-
-		//0x81b81664271f0942a2868283a1f658425b5a0de3d41161a8836ccf066108af49
-        assert(genesis.hashMerkleRoot == uint256(""));
+        assert(hashGenesisBlock == uint256("0x00000a49ec81e566b6013e403ef710dae79742be34c920ec6ace4e0897879c7f"));
+        assert(genesis.hashMerkleRoot == uint256("0x81b81664271f0942a2868283a1f658425b5a0de3d41161a8836ccf066108af49"));
         
 
         vSeeds.push_back(CDNSSeedData("n1.ccbcoin.club", "n1.ccbcoin.club"));
