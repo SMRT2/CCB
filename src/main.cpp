@@ -1679,14 +1679,16 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
 
     // 70% for Masternodes on current block
     if (nHeight <= 98800) {
-        ret = blockValue / 100 * 70; //70%
+        ret = blockValue * 0.70; //70%
     } else if (nHeight > 98800 && nHeight <= 113200) {
-        ret = blockValue / 100 * 72; //72%
+        ret = blockValue * 0.72; //72%
     } else if (nHeight > 113200 && nHeight <= 127600) {
-        ret = blockValue / 100 * 74; //74%
+        ret = blockValue * 0.74; //74%
     } else {
-        ret = blockValue / 18 * 75; //74%
+        ret = blockValue * 0.75; //74%
     }
+
+    return ret;
 
     //Old Masternode Reward Structure
 
